@@ -1,4 +1,4 @@
-﻿# CleanStart Startup Simulation
+﻿# CleanStart Simulation
 
 Single-player, turn-based startup simulation inspired by MIT CleanStart. Each turn is one quarter.
 
