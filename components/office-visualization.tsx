@@ -1,9 +1,10 @@
-﻿interface OfficeVisualizationProps {
+interface OfficeVisualizationProps {
   engineers: number;
   sales: number;
 }
 
 const FLOOR_CAPACITY = 50;
+const MAX_RENDER_CAPACITY = 500;
 
 type DeskRole = 'eng' | 'sales' | 'empty';
 
@@ -16,6 +17,32 @@ export default function OfficeVisualization({
     FLOOR_CAPACITY,
     Math.ceil(total / FLOOR_CAPACITY) * FLOOR_CAPACITY,
   );
+
+  if (capacity > MAX_RENDER_CAPACITY) {
+    return (
+      <section className="card">
+        <h3>Office</h3>
+        <p>
+          Headcount {total}/{capacity} desks
+        </p>
+        <p>
+          Visualization simplified for large teams ({MAX_RENDER_CAPACITY}+ desks).
+        </p>
+        <div className="line-legend">
+          <span>
+            <i className="dot eng" /> Engineering ({engineers})
+          </span>
+          <span>
+            <i className="dot sales" /> Sales ({sales})
+          </span>
+          <span>
+            <i className="dot empty" /> Empty ({capacity - total})
+          </span>
+        </div>
+      </section>
+    );
+  }
+
   const floorCount = Math.max(1, Math.ceil(capacity / FLOOR_CAPACITY));
   const emptyCount = capacity - total;
 

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getOrCreateGame } from '@/lib/game-store';
 import { DECISION_LIMITS, simulateQuarter } from '@/lib/simulation';
-import { createClient } from '@/lib/supabase/server';
+import { createRouteHandlerClient } from '@/lib/supabase/server';
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
+  const supabase = await createRouteHandlerClient();
   const {
     data: { user },
     error: authError,
