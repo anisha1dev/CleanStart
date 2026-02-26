@@ -1,17 +1,16 @@
-﻿'use client';
+'use client';
 
 import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { API_BASE } from '@/lib/api';
 
 type Mode = 'login' | 'signup';
 
 export default function AuthForm() {
-  const router = useRouter();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [awaitingDashboard, setAwaitingDashboard] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<'error' | 'notice'>('error');
 
@@ -20,38 +19,61 @@ export default function AuthForm() {
     setLoading(true);
     setMessage(null);
     setMessageType('error');
+    let navigatingToDashboard = false;
 
     const endpoint = mode === 'login' ? `${API_BASE}/auth/login` : `${API_BASE}/auth/signup`;
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-    const data = await response.json();
-    if (!response.ok) {
-      setMessage(data.error ?? 'Authentication failed');
-      setLoading(false);
-      return;
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+        signal: controller.signal,
+      });
+
+      let data: any = null;
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
+      if (!response.ok) {
+        setMessage(data?.error ?? `Authentication failed (${response.status})`);
+        return;
+      }
+
+      if (mode === 'signup') {
+        setMessageType('notice');
+        setMessage(
+          'Account created. Check your email inbox and spam folder for the confirmation link, then sign in.',
+        );
+        return;
+      }
+
+      // Force full navigation so freshly set auth cookies are guaranteed on the next request.
+      setAwaitingDashboard(true);
+      navigatingToDashboard = true;
+      window.location.assign('/dashboard');
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        setMessage('Request timed out. Please try again.');
+      } else {
+        setMessage('Network error. Please try again.');
+      }
+    } finally {
+      clearTimeout(timeoutId);
+      if (!navigatingToDashboard) {
+        setLoading(false);
+      }
     }
-
-    if (mode === 'signup') {
-      setMessageType('notice');
-      setMessage(
-        'Account created. Check your email inbox and spam folder for the confirmation link, then sign in.',
-      );
-      setLoading(false);
-      return;
-    }
-
-    router.replace('/dashboard');
-    router.refresh();
   }
 
   return (
     <section className="card auth-card">
       <h1>CleanStart Simulation</h1>
-      <p>Sign in to continue your startup run.</p>
+      <p>{mode === 'login' ? 'Sign in to continue your startup run.' : 'Create an account to start your run.'}</p>
       <form onSubmit={onSubmit}>
         <label>
           Email
@@ -75,7 +97,7 @@ export default function AuthForm() {
           />
         </label>
         <button type="submit" disabled={loading}>
-          {loading ? 'Please wait...' : mode === 'login' ? 'Sign in' : 'Create account'}
+          {loading ? (awaitingDashboard ? 'Loading dashboard...' : 'Please wait...') : mode === 'login' ? 'Sign in' : 'Create account'}
         </button>
       </form>
       <button type="button" className="link" onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
@@ -85,4 +107,6 @@ export default function AuthForm() {
     </section>
   );
 }
+
+
 

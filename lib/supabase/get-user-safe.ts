@@ -4,7 +4,7 @@ type AuthResponse = {
 
 export async function getUserSafe(
   supabase: { auth: { getUser: () => Promise<AuthResponse> } },
-  timeoutMs = 800,
+  timeoutMs = 5000,
 ) {
   try {
     const result = await Promise.race([

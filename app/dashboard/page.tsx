@@ -17,7 +17,7 @@ function money(value: number) {
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const user = await getUserSafe(supabase);
+  const user = await getUserSafe(supabase, 8000);
 
   if (!user) {
     redirect('/login');

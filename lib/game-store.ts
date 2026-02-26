@@ -8,7 +8,7 @@ export async function getOrCreateGame(userId: string): Promise<GameState> {
 
   const { data: existing, error: selectError } = await withTimeout(
     supabase.from('games').select('*').eq('user_id', userId).maybeSingle(),
-    1500,
+    6000,
     'Load game',
   );
 
@@ -18,7 +18,7 @@ export async function getOrCreateGame(userId: string): Promise<GameState> {
 
   const { data: created, error: insertError } = await withTimeout(
     supabase.from('games').insert({ user_id: userId, ...DEFAULT_GAME }).select('*').single(),
-    1500,
+    6000,
     'Create game',
   );
 
@@ -35,7 +35,7 @@ export async function getRecentHistory(gameId: string, limit = 4): Promise<Quart
       .eq('game_id', gameId)
       .order('quarter', { ascending: false })
       .limit(limit),
-    1500,
+    6000,
     'Load history',
   );
 
@@ -50,7 +50,7 @@ export async function resetGameForUser(userId: string, gameId: string): Promise<
   // Clear dependent history first, then reset the game row to defaults.
   const { error: historyError } = await withTimeout(
     supabase.from('quarter_history').delete().eq('game_id', gameId),
-    1500,
+    6000,
     'Clear history',
   );
   if (historyError) throw historyError;
@@ -63,7 +63,7 @@ export async function resetGameForUser(userId: string, gameId: string): Promise<
       })
       .eq('id', gameId)
       .eq('user_id', userId),
-    1500,
+    6000,
     'Reset game',
   );
 
